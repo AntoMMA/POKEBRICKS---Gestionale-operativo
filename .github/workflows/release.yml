@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -27,8 +31,12 @@ jobs:
           $pfxPath = Join-Path $env:RUNNER_TEMP 'pokebricks-codesign.pfx'
           [System.IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_BASE64))
           "CSC_LINK=$pfxPath" >> $env:GITHUB_ENV
-      - name: Publish signed release
+      - name: Build signed installer
         env:
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: npm run dist:win
+      - name: Publish a single complete release
+        shell: pwsh
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run release
+        run: ./scripts/publish-github-release.ps1
