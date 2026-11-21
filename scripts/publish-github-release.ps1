@@ -67,12 +67,15 @@ if (-not $release) {
   }
 }
 
-$uploadUrl = [string]$release.upload_url -replace '\{\?name,label\}$', ''
+$uploadUrl = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$($release.id)/assets"
+[uri]$uploadBaseUri = $uploadUrl
+if ($uploadBaseUri.Scheme -ne 'https' -or $uploadBaseUri.Host -ne 'uploads.github.com') { throw 'GitHub returned an invalid upload endpoint.' }
 foreach ($assetPath in $assets) {
   $assetName = [System.IO.Path]::GetFileName($assetPath)
   $encodedName = [Uri]::EscapeDataString($assetName)
   $contentType = if ($assetName -eq 'latest.yml') { 'text/yaml' } else { 'application/octet-stream' }
-  Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$encodedName" -Headers $headers -ContentType $contentType -InFile $assetPath | Out-Null
+  $assetUri = [uri]"${uploadUrl}?name=${encodedName}"
+  Invoke-RestMethod -Method Post -Uri $assetUri -Headers $headers -ContentType $contentType -InFile $assetPath | Out-Null
   Write-Host "Uploaded $assetName"
 }
 
