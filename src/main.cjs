@@ -21,6 +21,19 @@ function writeStore(data) {
   fs.renameSync(tmp, file);
   return true;
 }
+function restoreStore(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data) || !data.settings || typeof data.settings !== 'object' || Array.isArray(data.settings) || !Array.isArray(data.products) || !Array.isArray(data.sales) || !Array.isArray(data.documents) || ![...data.products, ...data.sales, ...data.documents].every(item => item && typeof item === 'object' && !Array.isArray(item))) {
+    throw new Error('Il file non è un backup POKEBRICKS valido.');
+  }
+  const file = dataFile();
+  if (fs.existsSync(file)) {
+    const backupDir = path.join(app.getPath('userData'), 'backups');
+    fs.mkdirSync(backupDir, { recursive: true });
+    const stamp = new Date().toISOString().replaceAll(':', '-');
+    fs.copyFileSync(file, path.join(backupDir, `prima-del-ripristino-${stamp}.json`));
+  }
+  return writeStore(data);
+}
 function createWindow() {
   win = new BrowserWindow({ width: 1440, height: 940, minWidth: 1120, minHeight: 720, backgroundColor: '#f5f6f8', title: 'POKEBRICKS - Gestionale operativo', icon: path.join(__dirname, '..', 'assets', 'pokebricks.ico'), webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   win.loadFile(path.join(__dirname, 'index.html'));
@@ -29,6 +42,7 @@ function createWindow() {
 app.whenReady().then(() => {
   ipcMain.handle('store:load', () => readStore());
   ipcMain.handle('store:save', (_event, data) => writeStore(data));
+  ipcMain.handle('store:restore', (_event, data) => restoreStore(data));
   ipcMain.handle('app:version', () => app.getVersion());
   createWindow();
   if (app.isPackaged) {
