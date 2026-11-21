@@ -1,0 +1,59 @@
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const path = require('node:path');
+const fs = require('node:fs');
+const { autoUpdater } = require('electron-updater');
+
+let win;
+const dataFile = () => path.join(app.getPath('userData'), 'pokebricks-data.json');
+const initial = { schemaVersion: 1, settings: { shopName: 'POKEBRICKS', currency: 'EUR', accent: '#e24842' }, products: [], sales: [], documents: [], updatedAt: new Date().toISOString() };
+function readStore() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(dataFile(), 'utf8'));
+    // Forward-compatible merge: unknown fields and existing records are retained through app updates.
+    return { ...initial, ...parsed, settings: { ...initial.settings, ...(parsed.settings || {}) }, products: parsed.products || [], sales: parsed.sales || [], documents: parsed.documents || [] };
+  } catch { return initial; }
+}
+function writeStore(data) {
+  const file = dataFile();
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify({ ...data, schemaVersion: 1, updatedAt: new Date().toISOString() }, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, file);
+  return true;
+}
+function createWindow() {
+  win = new BrowserWindow({ width: 1440, height: 940, minWidth: 1120, minHeight: 720, backgroundColor: '#f5f6f8', title: 'POKEBRICKS - Gestionale operativo', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  win.loadFile(path.join(__dirname, 'index.html'));
+  win.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith('https://')) shell.openExternal(url); return { action: 'deny' }; });
+}
+app.whenReady().then(() => {
+  ipcMain.handle('store:load', () => readStore());
+  ipcMain.handle('store:save', (_event, data) => writeStore(data));
+  ipcMain.handle('app:version', () => app.getVersion());
+  createWindow();
+  if (app.isPackaged) {
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on('checking-for-update', () => win?.webContents.send('update:status', { state: 'checking' }));
+    autoUpdater.on('update-available', info => win?.webContents.send('update:status', { state: 'available', version: info.version }));
+    autoUpdater.on('update-not-available', () => win?.webContents.send('update:status', { state: 'current' }));
+    autoUpdater.on('download-progress', p => win?.webContents.send('update:progress', { percent: Math.round(p.percent), transferred: p.transferred, total: p.total }));
+    autoUpdater.on('update-downloaded', info => win?.webContents.send('update:status', { state: 'downloaded', version: info.version }));
+    autoUpdater.on('error', error => win?.webContents.send('update:status', { state: 'error', message: error.message }));
+    autoUpdater.checkForUpdates().catch(() => {});
+    setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 6 * 60 * 60 * 1000);
+  }
+  app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+});
+ipcMain.on('update:install', () => {
+  try {
+    const source = dataFile();
+    if (fs.existsSync(source)) {
+      const folder = path.join(app.getPath('userData'), 'backups');
+      fs.mkdirSync(folder, { recursive: true });
+      fs.copyFileSync(source, path.join(folder, `before-update-${new Date().toISOString().replaceAll(':','-')}.json`));
+    }
+  } catch (error) { win?.webContents.send('update:status', { state: 'error', message: `Backup prima dell’aggiornamento non riuscito: ${error.message}` }); return; }
+  autoUpdater.quitAndInstall(false, true);
+});
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

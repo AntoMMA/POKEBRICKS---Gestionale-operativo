@@ -1,0 +1,31 @@
+{
+  "name": "pokebricks-gestionale",
+  "productName": "POKEBRICKS - Gestionale operativo",
+  "version": "0.1.0",
+  "description": "Gestionale locale per vendite live e collezionabili TCG",
+  "main": "src/main.cjs",
+  "author": "POKEBRICKS",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --publish never",
+    "dist:win:signed": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-win-signed.ps1",
+    "dist:mac": "electron-builder --mac dmg --publish never",
+    "dist:linux": "electron-builder --linux AppImage --publish never",
+    "release": "electron-builder --publish always"
+  },
+  "dependencies": { "electron-updater": "^6.6.2" },
+  "devDependencies": { "electron": "^36.3.1", "electron-builder": "^26.0.12" },
+  "build": {
+    "appId": "it.pokebricks.gestionale",
+    "productName": "POKEBRICKS - Gestionale operativo",
+    "directories": { "output": "release" },
+    "files": ["src/**/*", "package.json"],
+    "asar": true,
+    "publish": [{ "provider": "github", "owner": "AntoMMA", "repo": "POKEBRICKS---Gestionale-operativo", "releaseType": "release" }],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "artifactName": "POKEBRICKS-Setup-${version}.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true },
+    "mac": { "target": "dmg", "category": "public.app-category.business", "hardenedRuntime": true, "gatekeeperAssess": false },
+    "linux": { "target": "AppImage", "category": "Office" }
+  }
+}

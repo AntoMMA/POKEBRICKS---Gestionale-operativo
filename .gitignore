@@ -1,0 +1,11 @@
+node_modules/
+.npm-cache/
+work/
+release/
+dist/
+.env
+.env.local
+*.p12
+*.pfx
+*.cer
+*.provisionprofile
