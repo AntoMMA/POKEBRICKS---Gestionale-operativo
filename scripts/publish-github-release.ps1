@@ -8,6 +8,9 @@ $package = Get-Content -LiteralPath (Join-Path $root 'package.json') -Raw | Conv
 $version = [string]$package.version
 $tag = [string]$env:GITHUB_REF_NAME
 if ($tag -ne "v$version") { throw "Tag $tag does not match package version $version." }
+$notesPath = Join-Path (Join-Path $root 'release-notes') "$tag.md"
+if (-not (Test-Path -LiteralPath $notesPath -PathType Leaf)) { throw "Release notes not found: $notesPath" }
+$releaseNotes = Get-Content -LiteralPath $notesPath -Raw
 
 $output = Join-Path $root 'release'
 $installerName = "POKEBRICKS-Setup-$version.exe"
@@ -79,6 +82,6 @@ foreach ($assetPath in $assets) {
   Write-Host "Uploaded $assetName"
 }
 
-$publishBody = @{ draft = $false } | ConvertTo-Json
+$publishBody = @{ draft = $false; body = $releaseNotes } | ConvertTo-Json
 Invoke-RestMethod -Method Patch -Uri "$api/releases/$($release.id)" -Headers $headers -ContentType 'application/json' -Body $publishBody | Out-Null
 Write-Host "Published $tag with installer and updater manifest in one GitHub release."

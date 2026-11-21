@@ -49,10 +49,10 @@ app.whenReady().then(() => {
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
     autoUpdater.on('checking-for-update', () => win?.webContents.send('update:status', { state: 'checking' }));
-    autoUpdater.on('update-available', info => win?.webContents.send('update:status', { state: 'available', version: info.version }));
+    autoUpdater.on('update-available', info => win?.webContents.send('update:status', { state: 'available', version: info.version, releaseNotes: info.releaseNotes }));
     autoUpdater.on('update-not-available', () => win?.webContents.send('update:status', { state: 'current' }));
     autoUpdater.on('download-progress', p => win?.webContents.send('update:progress', { percent: Math.round(p.percent), transferred: p.transferred, total: p.total }));
-    autoUpdater.on('update-downloaded', info => win?.webContents.send('update:status', { state: 'downloaded', version: info.version }));
+    autoUpdater.on('update-downloaded', info => win?.webContents.send('update:status', { state: 'downloaded', version: info.version, releaseNotes: info.releaseNotes }));
     autoUpdater.on('error', error => win?.webContents.send('update:status', { state: 'error', message: error.message }));
     autoUpdater.checkForUpdates().catch(() => {});
     setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 6 * 60 * 60 * 1000);
