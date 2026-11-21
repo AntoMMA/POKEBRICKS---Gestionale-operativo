@@ -15,7 +15,7 @@ $releaseNotes = Get-Content -LiteralPath $notesPath -Raw
 $output = Join-Path $root 'release'
 $installerName = "POKEBRICKS-Setup-$version.exe"
 $installerPath = Join-Path $output $installerName
-if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) { throw "Signed installer not found: $installerPath" }
+if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) { throw "Unsigned installer not found: $installerPath" }
 
 $stream = [System.IO.File]::OpenRead($installerPath)
 try {
