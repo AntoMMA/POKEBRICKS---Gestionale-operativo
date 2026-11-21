@@ -82,6 +82,6 @@ foreach ($assetPath in $assets) {
   Write-Host "Uploaded $assetName"
 }
 
-$publishBody = @{ draft = $false; body = $releaseNotes } | ConvertTo-Json
+$publishBody = @{ draft = $false; body = $releaseNotes } | ConvertTo-Json -Depth 10
 Invoke-RestMethod -Method Patch -Uri "$api/releases/$($release.id)" -Headers $headers -ContentType 'application/json' -Body $publishBody | Out-Null
 Write-Host "Published $tag with installer and updater manifest in one GitHub release."

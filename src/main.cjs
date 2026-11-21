@@ -5,7 +5,7 @@ const { autoUpdater } = require('electron-updater');
 
 let win;
 const dataFile = () => path.join(app.getPath('userData'), 'pokebricks-data.json');
-const initial = { schemaVersion: 1, settings: { shopName: 'POKEBRICKS', currency: 'EUR', accent: '#e24842' }, products: [], sales: [], documents: [], updatedAt: new Date().toISOString() };
+const initial = { schemaVersion: 1, settings: { shopName: 'POKEBRICKS', currency: 'EUR', accent: '#e24842', lowStockThreshold: 2 }, products: [], sales: [], documents: [], updatedAt: new Date().toISOString() };
 function readStore() {
   try {
     const parsed = JSON.parse(fs.readFileSync(dataFile(), 'utf8'));
