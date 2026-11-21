@@ -9,7 +9,6 @@
   "scripts": {
     "start": "electron .",
     "dist:win": "electron-builder --win nsis --publish never",
-    "dist:win:signed": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-win-signed.ps1",
     "dist:mac": "electron-builder --mac dmg --publish never",
     "dist:linux": "electron-builder --linux AppImage --publish never"
   },
@@ -22,7 +21,7 @@
     "files": ["src/**/*", "assets/**/*", "package.json"],
     "asar": true,
     "publish": [{ "provider": "github", "owner": "AntoMMA", "repo": "POKEBRICKS---Gestionale-operativo", "releaseType": "release" }],
-    "win": { "icon": "assets/pokebricks.ico", "target": [{ "target": "nsis", "arch": ["x64"] }], "artifactName": "POKEBRICKS-Setup-${version}.${ext}" },
+    "win": { "icon": "assets/pokebricks.ico", "verifyUpdateCodeSignature": false, "target": [{ "target": "nsis", "arch": ["x64"] }], "artifactName": "POKEBRICKS-Setup-${version}.${ext}" },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "installerIcon": "assets/pokebricks.ico", "uninstallerIcon": "assets/pokebricks.ico", "installerHeaderIcon": "assets/pokebricks.ico" },
     "mac": { "target": "dmg", "category": "public.app-category.business", "hardenedRuntime": true, "gatekeeperAssess": false },
     "linux": { "target": "AppImage", "category": "Office", "icon": "assets/pokebricks-icon.png" }

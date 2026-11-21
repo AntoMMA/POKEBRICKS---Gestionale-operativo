@@ -10,22 +10,18 @@ Applicazione desktop Electron con archivio JSON locale, catalogo prodotti, vendi
 
 ## Pacchetto e aggiornamenti
 
-`npm run dist:win` crea l'installer Windows locale; `npm run release` pubblica gli artefatti su una GitHub Release. Gli aggiornamenti funzionano sulle build installate e firmate, con una release GitHub pubblicata e `latest.yml` prodotto da electron-builder. Gli aggiornamenti vengono scaricati automaticamente; a download finito l'app mostra percentuale, sfoca lo sfondo, attende cinque secondi ed esegue il riavvio. Prima di installare viene salvata una copia dei dati nella directory `backups` dell'area dati utente.
+`npm run dist:win` crea l'installer Windows senza certificato digitale. Per pubblicare la release, aggiorna la versione in `package.json`, invia le modifiche al repository e pubblica il tag corrispondente, per esempio `v0.1.8`. Il workflow `.github/workflows/release.yml` genera il manifest di aggiornamento e carica in sequenza installer e file di supporto in un'unica release GitHub.
 
-Per pubblicare una release firmata, crea i GitHub Actions secrets `WINDOWS_CERTIFICATE_BASE64` (contenuto del PFX codificato Base64) e `CSC_KEY_PASSWORD` (password del PFX). Poi pubblica un tag `v` che corrisponde alla versione in `package.json`, per esempio `v0.1.0`. Il workflow `.github/workflows/release.yml` crea la release firmata. Non inserire mai il PFX o la password nei file Git.
+Le build senza firma possono mostrare un avviso di sicurezza di Windows durante il download o l'installazione. Gli aggiornamenti vengono scaricati automaticamente; a download finito l'app mostra la percentuale, le note della release, sfoca lo sfondo, attende cinque secondi ed esegue il riavvio. Prima di installare viene salvata una copia dei dati nella directory `backups` dell'area dati utente.
 
-### Firma professionale
+Poiché gli aggiornamenti Windows non hanno firma digitale, l'app non può verificare l'identità del firmatario: pubblica release solo tramite il repository GitHub ufficiale e proteggi l'accesso all'account e al repository.
 
-- **Windows:** questa configurazione usa il certificato PFX fornito. Esegui `npm run dist:win:signed`: il percorso del certificato viene letto da `POKEBRICKS_CERT_PATH` (o dal file locale ignorato `.env.local`) e la password viene richiesta in un prompt protetto. La password non viene scritta nel repository.
-- **macOS:** richiede Developer ID Application, notarizzazione Apple e segreti del team configurati per electron-builder (`CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`).
-- Non inserire certificati o password in Git. Linux non offre una firma desktop universale equivalente; le firme dipendono dal canale di distribuzione scelto.
-
-Il certificato è protetto da password. Finché non viene sbloccato durante una build, non ne sono stati verificati intestatario, uso per code signing o scadenza. Non posso dichiarare l'identità aziendale, il proprietario GitHub o le credenziali di pubblicazione al posto del distributore.
+La 0.1.8 è il passaggio dalle build firmate a quelle senza certificato. Le installazioni precedenti devono installare manualmente l'installer 0.1.8 una volta, sopra l'app esistente e senza disinstallarla; le versioni successive potranno usare il sistema automatico senza certificato.
 
 ## Dati locali e limiti fiscali
 
 I dati sono conservati come `pokebricks-data.json` nella directory `app.getPath('userData')`, separata dall'installazione. Il salvataggio usa file temporaneo e rinomina atomica; l'app non sincronizza il database con servizi cloud. Da Impostazioni si può esportare una copia JSON. Conserva copie di backup protette, specialmente quando il dispositivo è condiviso.
 
-Catalogo, vendite e documenti sono una base operativa iniziale. Le stampe sono chiaramente marcate come bozze e non sostituiscono fattura elettronica o DDT fiscalmente validi. Per l'emissione italiana occorrono analisi del regime fiscale, XML FatturaPA, trasmissione e gestione esiti SDI, numerazione e conservazione a norma, oltre a una revisione di un commercialista. La firma digitale professionale dei pacchetti software e la firma elettronica di documenti fiscali sono processi distinti.
+Catalogo, vendite e documenti sono una base operativa iniziale. Le stampe sono chiaramente marcate come bozze e non sostituiscono fattura elettronica o DDT fiscalmente validi. Per l'emissione italiana occorrono analisi del regime fiscale, XML FatturaPA, trasmissione e gestione esiti SDI, numerazione e conservazione a norma, oltre a una revisione di un commercialista.
 
 La personalizzazione attuale copre nome negozio, valuta e colore. Ulteriori campi, template, ruoli, canali live, flussi resi e integrazioni richiedono requisiti specifici e sviluppo dedicato.

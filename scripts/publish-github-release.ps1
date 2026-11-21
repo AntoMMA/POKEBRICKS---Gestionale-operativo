@@ -58,16 +58,16 @@ try {
 }
 
 if ($release -and -not $release.draft) {
-  throw "Release $tag is already published. Use a new version tag instead of creating a second release with the same tag."
+  $resetBody = @{ draft = $true; body = $releaseNotes } | ConvertTo-Json -Depth 10
+  $release = Invoke-RestMethod -Method Patch -Uri "$api/releases/$($release.id)" -Headers $headers -ContentType 'application/json' -Body $resetBody
 }
 
 if (-not $release) {
   $body = @{ tag_name = $tag; name = $version; draft = $true; prerelease = $false } | ConvertTo-Json
   $release = Invoke-RestMethod -Method Post -Uri "$api/releases" -Headers $headers -ContentType 'application/json' -Body $body
-} else {
-  foreach ($oldAsset in @($release.assets)) {
-    Invoke-RestMethod -Method Delete -Uri "$api/releases/assets/$($oldAsset.id)" -Headers $headers | Out-Null
-  }
+}
+foreach ($oldAsset in @($release.assets)) {
+  Invoke-RestMethod -Method Delete -Uri "$api/releases/assets/$($oldAsset.id)" -Headers $headers | Out-Null
 }
 
 $uploadUrl = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$($release.id)/assets"
