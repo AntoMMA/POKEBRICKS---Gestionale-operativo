@@ -44,6 +44,23 @@ app.whenReady().then(() => {
   ipcMain.handle('store:save', (_event, data) => writeStore(data));
   ipcMain.handle('store:restore', (_event, data) => restoreStore(data));
   ipcMain.handle('app:version', () => app.getVersion());
+  ipcMain.handle('document:print', async (event, html) => {
+    if (typeof html !== 'string' || html.length > 2_000_000) throw new Error('Documento non valido o troppo grande per la stampa.');
+    const parent = BrowserWindow.fromWebContents(event.sender);
+    const printWindow = new BrowserWindow({ width: 800, height: 1000, show: false, ...(parent ? { parent } : {}), webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+    try {
+      await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      return await new Promise(resolve => {
+        printWindow.webContents.print({ silent: false, printBackground: true }, (success, failureReason) => {
+          resolve({ success, reason: failureReason || '' });
+          if (!printWindow.isDestroyed()) printWindow.close();
+        });
+      });
+    } catch (error) {
+      if (!printWindow.isDestroyed()) printWindow.close();
+      throw new Error(`Impossibile preparare il documento per la stampa: ${error.message}`);
+    }
+  });
   createWindow();
   if (app.isPackaged) {
     autoUpdater.autoDownload = true;
