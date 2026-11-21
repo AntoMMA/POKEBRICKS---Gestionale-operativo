@@ -1,7 +1,7 @@
 {
   "name": "pokebricks-gestionale",
   "productName": "POKEBRICKS - Gestionale operativo",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Gestionale locale per vendite live e collezionabili TCG",
   "main": "src/main.cjs",
   "author": "POKEBRICKS",
