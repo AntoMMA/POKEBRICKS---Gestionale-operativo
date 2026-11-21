@@ -22,7 +22,7 @@ function writeStore(data) {
   return true;
 }
 function createWindow() {
-  win = new BrowserWindow({ width: 1440, height: 940, minWidth: 1120, minHeight: 720, backgroundColor: '#f5f6f8', title: 'POKEBRICKS - Gestionale operativo', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  win = new BrowserWindow({ width: 1440, height: 940, minWidth: 1120, minHeight: 720, backgroundColor: '#f5f6f8', title: 'POKEBRICKS - Gestionale operativo', icon: path.join(__dirname, '..', 'assets', 'pokebricks.ico'), webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   win.loadFile(path.join(__dirname, 'index.html'));
   win.webContents.setWindowOpenHandler(({ url }) => { if (url.startsWith('https://')) shell.openExternal(url); return { action: 'deny' }; });
 }

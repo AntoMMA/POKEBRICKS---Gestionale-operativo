@@ -1,7 +1,7 @@
 {
   "name": "pokebricks-gestionale",
   "productName": "POKEBRICKS - Gestionale operativo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gestionale locale per vendite live e collezionabili TCG",
   "main": "src/main.cjs",
   "author": "POKEBRICKS",
@@ -20,12 +20,12 @@
     "appId": "it.pokebricks.gestionale",
     "productName": "POKEBRICKS - Gestionale operativo",
     "directories": { "output": "release" },
-    "files": ["src/**/*", "package.json"],
+    "files": ["src/**/*", "assets/**/*", "package.json"],
     "asar": true,
     "publish": [{ "provider": "github", "owner": "AntoMMA", "repo": "POKEBRICKS---Gestionale-operativo", "releaseType": "release" }],
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "artifactName": "POKEBRICKS-Setup-${version}.${ext}" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true },
+    "win": { "icon": "assets/pokebricks.ico", "target": [{ "target": "nsis", "arch": ["x64"] }], "artifactName": "POKEBRICKS-Setup-${version}.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "installerIcon": "assets/pokebricks.ico", "uninstallerIcon": "assets/pokebricks.ico", "installerHeaderIcon": "assets/pokebricks.ico" },
     "mac": { "target": "dmg", "category": "public.app-category.business", "hardenedRuntime": true, "gatekeeperAssess": false },
-    "linux": { "target": "AppImage", "category": "Office" }
+    "linux": { "target": "AppImage", "category": "Office", "icon": "assets/pokebricks-icon.png" }
   }
 }
