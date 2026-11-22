@@ -10,7 +10,7 @@ Applicazione desktop Electron con archivio JSON locale, catalogo prodotti, vendi
 
 ## Pacchetto e aggiornamenti
 
-`npm run dist:win` crea l'installer Windows senza certificato digitale. Tutte le versioni da 0.1.8 in avanti sono distribuite senza certificato. Per pubblicare la release, aggiorna la versione in `package.json`, invia le modifiche al repository e pubblica il tag corrispondente, per esempio `v0.1.13`. Il workflow `.github/workflows/release.yml` genera il manifest di aggiornamento e carica in sequenza installer e file di supporto in un'unica release GitHub.
+`npm run dist:win` crea l'installer Windows senza certificato digitale. Tutte le versioni da 0.1.8 in avanti sono distribuite senza certificato. Per pubblicare la release, aggiorna la versione in `package.json`, invia le modifiche al repository e pubblica il tag corrispondente, per esempio `v0.1.14`. Il workflow `.github/workflows/release.yml` genera il manifest di aggiornamento e carica in sequenza installer e file di supporto in un'unica release GitHub.
 
 Le build senza firma possono mostrare un avviso di sicurezza di Windows durante il download o l'installazione. Gli aggiornamenti vengono scaricati automaticamente; a download finito l'app mostra la percentuale, le note della release, sfoca lo sfondo, attende cinque secondi ed esegue il riavvio. Prima di installare viene salvata una copia dei dati nella directory `backups` dell'area dati utente.
 
