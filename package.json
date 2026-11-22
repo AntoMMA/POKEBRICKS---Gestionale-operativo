@@ -1,7 +1,7 @@
 {
   "name": "pokebricks-gestionale",
   "productName": "POKEBRICKS - Gestionale operativo",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "Gestionale locale per vendite live e collezionabili TCG",
   "main": "src/main.cjs",
   "author": "POKEBRICKS",
@@ -12,18 +12,65 @@
     "dist:mac": "electron-builder --mac dmg --publish never",
     "dist:linux": "electron-builder --linux AppImage --publish never"
   },
-  "dependencies": { "electron-updater": "^6.6.2" },
-  "devDependencies": { "electron": "^36.3.1", "electron-builder": "^26.0.12" },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^36.3.1",
+    "electron-builder": "^26.0.12"
+  },
   "build": {
     "appId": "it.pokebricks.gestionale",
     "productName": "POKEBRICKS - Gestionale operativo",
-    "directories": { "output": "release" },
-    "files": ["src/**/*", "assets/**/*", "package.json"],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
     "asar": true,
-    "publish": [{ "provider": "github", "owner": "AntoMMA", "repo": "POKEBRICKS---Gestionale-operativo", "releaseType": "release" }],
-    "win": { "icon": "assets/pokebricks.ico", "verifyUpdateCodeSignature": false, "target": [{ "target": "nsis", "arch": ["x64"] }], "artifactName": "POKEBRICKS-Setup-${version}.${ext}" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "installerIcon": "assets/pokebricks.ico", "uninstallerIcon": "assets/pokebricks.ico", "installerHeaderIcon": "assets/pokebricks.ico" },
-    "mac": { "target": "dmg", "category": "public.app-category.business", "hardenedRuntime": true, "gatekeeperAssess": false },
-    "linux": { "target": "AppImage", "category": "Office", "icon": "assets/pokebricks-icon.png" }
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "AntoMMA",
+        "repo": "POKEBRICKS---Gestionale-operativo",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "icon": "assets/pokebricks.ico",
+      "verifyUpdateCodeSignature": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "POKEBRICKS-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/pokebricks.ico",
+      "uninstallerIcon": "assets/pokebricks.ico",
+      "installerHeaderIcon": "assets/pokebricks.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Office",
+      "icon": "assets/pokebricks-icon.png"
+    }
   }
 }
