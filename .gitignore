@@ -1,5 +1,7 @@
 node_modules/
 .npm-cache/
+.electron-cache/
+.localappdata/
 work/
 release/
 dist/

@@ -1,16 +1,40 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { autoUpdater } = require('electron-updater');
+const tiktokApi = require('./tiktok-api.cjs');
 
 let win;
 const dataFile = () => path.join(app.getPath('userData'), 'pokebricks-data.json');
-const initial = { schemaVersion: 1, settings: { shopName: 'POKEBRICKS', currency: 'EUR', accent: '#e24842', lowStockThreshold: 2 }, products: [], sales: [], documents: [], updatedAt: new Date().toISOString() };
+const initial = { schemaVersion: 1, settings: { shopName: 'POKEBRICKS', currency: 'EUR', accent: '#e24842', lowStockThreshold: 2 }, products: [], sales: [], documents: [], tiktokOrders: [], updatedAt: new Date().toISOString() };
+const tiktokCredentialsFile = () => path.join(app.getPath('userData'), 'tiktok-credentials.bin');
+let tiktokSyncRunning = false;
+function readTikTokCredentials() {
+  try {
+    if (!safeStorage.isEncryptionAvailable()) throw new Error('La protezione delle credenziali non è disponibile su questo dispositivo.');
+    const encrypted = fs.readFileSync(tiktokCredentialsFile());
+    return JSON.parse(safeStorage.decryptString(encrypted));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+function writeTikTokCredentials(credentials) {
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('Impossibile salvare le chiavi: la protezione del sistema operativo non è disponibile.');
+  const file = tiktokCredentialsFile();
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temp = `${file}.tmp`;
+  fs.writeFileSync(temp, safeStorage.encryptString(JSON.stringify(credentials)), { mode: 0o600 });
+  fs.renameSync(temp, file);
+}
+function publicTikTokStatus(credentials) {
+  return { configured: Boolean(credentials?.appKey && credentials?.appSecret && credentials?.accessToken), selectedShop: credentials?.shopCipher ? { cipher: credentials.shopCipher, name: credentials.shopName || 'Negozio collegato' } : null, secretSaved: Boolean(credentials?.appSecret), tokenSaved: Boolean(credentials?.accessToken), refreshSaved: Boolean(credentials?.refreshToken), autoSync: Boolean(credentials?.autoSync), lastSync: credentials?.lastSync || null };
+}
 function readStore() {
   try {
     const parsed = JSON.parse(fs.readFileSync(dataFile(), 'utf8'));
     // Forward-compatible merge: unknown fields and existing records are retained through app updates.
-    return { ...initial, ...parsed, settings: { ...initial.settings, ...(parsed.settings || {}) }, products: parsed.products || [], sales: parsed.sales || [], documents: parsed.documents || [] };
+    return { ...initial, ...parsed, settings: { ...initial.settings, ...(parsed.settings || {}) }, products: parsed.products || [], sales: parsed.sales || [], documents: parsed.documents || [], tiktokOrders: parsed.tiktokOrders || [] };
   } catch { return initial; }
 }
 function writeStore(data) {
@@ -44,6 +68,72 @@ app.whenReady().then(() => {
   ipcMain.handle('store:save', (_event, data) => writeStore(data));
   ipcMain.handle('store:restore', (_event, data) => restoreStore(data));
   ipcMain.handle('app:version', () => app.getVersion());
+  ipcMain.handle('tiktok:status', () => publicTikTokStatus(readTikTokCredentials()));
+  ipcMain.handle('tiktok:save', (_event, input) => {
+    const current = readTikTokCredentials() || {};
+    const incoming = key => String(input?.[key] ?? '').trim();
+    const credentials = {
+      ...current,
+      appKey: incoming('appKey') || current.appKey || '',
+      appSecret: incoming('appSecret') || current.appSecret || '',
+      accessToken: incoming('accessToken') || current.accessToken || '',
+      refreshToken: incoming('refreshToken') || current.refreshToken || '',
+      autoSync: Boolean(input?.autoSync ?? current.autoSync)
+    };
+    if (!credentials.appKey || !credentials.appSecret || !credentials.accessToken) throw new Error('Inserisci App Key, App Secret e Access Token.');
+    writeTikTokCredentials(credentials);
+    return publicTikTokStatus(credentials);
+  });
+  ipcMain.handle('tiktok:connect', async () => {
+    const credentials = readTikTokCredentials();
+    if (!credentials?.appKey || !credentials?.appSecret || !credentials?.accessToken) throw new Error('Prima salva le credenziali API TikTok Shop.');
+    let shops;
+    try { shops = await tiktokApi.getAuthorizedShops(credentials); }
+    finally { writeTikTokCredentials(credentials); }
+    if (!shops.length) throw new Error('TikTok non ha trovato negozi autorizzati per queste credenziali. Verifica il collegamento e il permesso “Shop Authorized Information”.');
+    if (credentials.shopCipher && !shops.some(shop => shop.cipher === credentials.shopCipher || shop.shop_cipher === credentials.shopCipher)) {
+      credentials.shopCipher = '';
+      credentials.shopName = '';
+    }
+    writeTikTokCredentials(credentials);
+    return { status: publicTikTokStatus(credentials), shops: shops.map(shop => ({ cipher: shop.cipher || shop.shop_cipher, name: shop.name || shop.shop_name || 'Negozio TikTok', region: shop.region || shop.region_code || '' })).filter(shop => shop.cipher) };
+  });
+  ipcMain.handle('tiktok:select-shop', (_event, input) => {
+    const credentials = readTikTokCredentials();
+    if (!credentials) throw new Error('Salva prima le credenziali API.');
+    const cipher = String(input?.cipher || '').trim();
+    if (!cipher) throw new Error('Seleziona un negozio TikTok.');
+    credentials.shopCipher = cipher;
+    credentials.shopName = String(input?.name || 'Negozio TikTok').trim();
+    writeTikTokCredentials(credentials);
+    return publicTikTokStatus(credentials);
+  });
+  ipcMain.handle('tiktok:auto-sync', (_event, enabled) => {
+    const credentials = readTikTokCredentials();
+    if (!credentials) throw new Error('Salva prima le credenziali API.');
+    credentials.autoSync = Boolean(enabled);
+    writeTikTokCredentials(credentials);
+    return publicTikTokStatus(credentials);
+  });
+  ipcMain.handle('tiktok:sync', async (_event, since) => {
+    if (tiktokSyncRunning) throw new Error('È già in corso una sincronizzazione TikTok Shop.');
+    const credentials = readTikTokCredentials();
+    if (!credentials?.shopCipher) throw new Error('Collega e seleziona prima il negozio TikTok Shop.');
+    tiktokSyncRunning = true;
+    try {
+      const start = Number(since) || credentials.lastSync || Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
+      let result;
+      try { result = await tiktokApi.syncOrders(credentials, Math.max(0, start - 600)); }
+      finally { writeTikTokCredentials(credentials); }
+      credentials.lastSync = Math.floor(Date.now() / 1000);
+      writeTikTokCredentials(credentials);
+      return { orders: result.orders, status: publicTikTokStatus(credentials), syncedAt: credentials.lastSync };
+    } finally { tiktokSyncRunning = false; }
+  });
+  ipcMain.handle('tiktok:clear', () => {
+    try { fs.unlinkSync(tiktokCredentialsFile()); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    return publicTikTokStatus(null);
+  });
   ipcMain.handle('document:print', async (event, html) => {
     if (typeof html !== 'string' || html.length > 2_000_000) throw new Error('Documento non valido o troppo grande per la stampa.');
     const parent = BrowserWindow.fromWebContents(event.sender);

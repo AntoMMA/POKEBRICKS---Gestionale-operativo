@@ -10,7 +10,7 @@ Applicazione desktop Electron con archivio JSON locale, catalogo prodotti, vendi
 
 ## Pacchetto e aggiornamenti
 
-`npm run dist:win` crea l'installer Windows senza certificato digitale. Tutte le versioni da 0.1.8 in avanti sono distribuite senza certificato. Per pubblicare la release, aggiorna la versione in `package.json`, invia le modifiche al repository e pubblica il tag corrispondente, per esempio `v0.1.15`. Il workflow `.github/workflows/release.yml` genera il manifest di aggiornamento e carica in sequenza installer e file di supporto in un'unica release GitHub.
+`npm run dist:win` crea l'installer Windows senza certificato digitale. Tutte le versioni da 0.1.8 in avanti sono distribuite senza certificato. Per pubblicare la release, aggiorna la versione in `package.json`, invia le modifiche al repository e pubblica il tag corrispondente, per esempio `v0.1.16`. Il workflow `.github/workflows/release.yml` genera il manifest di aggiornamento e carica in sequenza installer e file di supporto in un'unica release GitHub.
 
 Le build senza firma possono mostrare un avviso di sicurezza di Windows durante il download o l'installazione. Gli aggiornamenti vengono scaricati automaticamente; a download finito l'app mostra la percentuale, le note della release, sfoca lo sfondo, attende cinque secondi ed esegue il riavvio. Prima di installare viene salvata una copia dei dati nella directory `backups` dell'area dati utente.
 
@@ -25,3 +25,9 @@ I dati sono conservati come `pokebricks-data.json` nella directory `app.getPath(
 Catalogo, vendite e documenti sono una base operativa iniziale. Le stampe sono chiaramente marcate come bozze e non sostituiscono fattura elettronica o DDT fiscalmente validi. Per l'emissione italiana occorrono analisi del regime fiscale, XML FatturaPA, trasmissione e gestione esiti SDI, numerazione e conservazione a norma, oltre a una revisione di un commercialista.
 
 La personalizzazione attuale copre nome negozio, valuta e colore. Ulteriori campi, template, ruoli, canali live, flussi resi e integrazioni richiedono requisiti specifici e sviluppo dedicato.
+
+## Collegamento TikTok Shop
+
+Apri la sezione **TikTok Shop** e inserisci manualmente App Key, App Secret, Access Token e, se disponibile, Refresh Token. Le credenziali non vengono incluse nel database esportabile: sono conservate in un file separato e cifrato tramite il sistema operativo sul computer in uso. Premi **Salva credenziali**, poi **Verifica e scegli negozio**; seleziona il negozio autorizzato e, se desideri, attiva la sincronizzazione automatica ogni cinque minuti. Nell'app TikTok Shop Developer Center devono essere attivi gli scope `seller.order.info` e `seller.authorization.info`.
+
+Il programma non genera le chiavi e non autorizza il negozio al posto del venditore: App Key, App Secret e token vanno ottenuti dal Partner Center TikTok e incollati manualmente. L'importazione degli ordini parte dopo che TikTok ha autorizzato il negozio e il token ha gli scope richiesti. Le vendite vengono associate al catalogo tramite SKU o nome esatto; gli ordini senza corrispondenza richiedono un'associazione manuale prima di scaricare le scorte.
